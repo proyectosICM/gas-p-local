@@ -1,8 +1,10 @@
 package com.icm.gas_p_local
 
+import ReceiveMessageTask
 import SendMessageTask
 import android.content.Context
 import android.os.Bundle
+import android.os.Handler
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
@@ -60,18 +62,31 @@ class AddDevice : AppCompatActivity() {
     }
 
     private fun simulateLongOperation(ipAddress: String) {
-        android.os.Handler().postDelayed({
+        Handler().postDelayed({
             progressBar.visibility = View.GONE
             val routerIp = NetworkUtils.getRouterIpAddress(this)
             if (isIpInSameNetwork(ipAddress, routerIp)) {
                 tvValidationMessage.text = "IP válida dentro de la red."
-                tvValidationMessage.setTextColor(resources.getColor(R.color.colorSuccess, null)) // Color verde
-                btnAdd.visibility = View.VISIBLE
+                tvValidationMessage.setTextColor(resources.getColor(R.color.colorSuccess, null))
 
-                SendMessageTask(ipAddress, 80).execute("isConnected")
+                // Enviar mensaje "isConnected" al dispositivo
+                SendMessageTask(ipAddress, 82).execute("isConnected")
+
+                // Recibir respuesta del dispositivo
+                ReceiveMessageTask(ipAddress, 82) { response ->
+                    if (response == "connect") {
+                        tvValidationMessage.text = "Dispositivo conectado correctamente."
+                        tvValidationMessage.setTextColor(resources.getColor(R.color.colorSuccess, null))
+                        btnAdd.visibility = View.VISIBLE
+                    } else {
+                        tvValidationMessage.text = "El dispositivo no ha respondido."
+                        tvValidationMessage.setTextColor(resources.getColor(R.color.colorError, null))
+                    }
+                }.execute()
+
             } else {
                 tvValidationMessage.text = "IP no válida dentro de la red."
-                tvValidationMessage.setTextColor(resources.getColor(R.color.colorError, null)) // Color rojo
+                tvValidationMessage.setTextColor(resources.getColor(R.color.colorError, null))
             }
         }, 3000)
     }
