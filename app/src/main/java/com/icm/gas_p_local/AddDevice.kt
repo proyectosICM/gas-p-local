@@ -1,10 +1,9 @@
 package com.icm.gas_p_local
 
-import ReceiveMessageTask
-import SendMessageTask
 import android.content.Context
 import android.os.Bundle
 import android.os.Handler
+import android.util.Log
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
@@ -12,6 +11,8 @@ import android.widget.EditText
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import com.icm.gas_p_local.utils.ESP32ConnectionManager
+import com.icm.gas_p_local.utils.NameDeviceExtractor
 import com.icm.gas_p_local.utils.NetworkUtils
 
 class AddDevice : AppCompatActivity() {
@@ -21,6 +22,9 @@ class AddDevice : AppCompatActivity() {
     private lateinit var btnBack: Button
     private lateinit var etIpAddress: EditText
     private lateinit var tvValidationMessage: TextView
+    private lateinit var deviceNameData: TextView
+
+    private var connectionManager: ESP32ConnectionManager? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,6 +36,7 @@ class AddDevice : AppCompatActivity() {
         btnBack = findViewById(R.id.btnBack)
         etIpAddress = findViewById(R.id.etIpAddress)
         tvValidationMessage = findViewById(R.id.tvValidationMessage)
+        deviceNameData = findViewById(R.id.deviceNameData)
 
         btnTest.setOnClickListener {
             // Hide the keyboard
@@ -66,29 +71,34 @@ class AddDevice : AppCompatActivity() {
             progressBar.visibility = View.GONE
             val routerIp = NetworkUtils.getRouterIpAddress(this)
             if (isIpInSameNetwork(ipAddress, routerIp)) {
-                tvValidationMessage.text = "IP válida dentro de la red."
-                tvValidationMessage.setTextColor(resources.getColor(R.color.colorSuccess, null))
+                connectionManager?.disconnect()
+                connectionManager = ESP32ConnectionManager(ipAddress, 82)
+                connectionManager?.connect { isConnected ->
+                    if (isConnected) {
+                        // Enviar el primer mensaje
+                        connectionManager?.sendMessage("getName")
 
-                // Enviar mensaje "isConnected" al dispositivo
-                SendMessageTask(ipAddress, 82).execute("isConnected")
+                        // Esperar la respuesta
+                        connectionManager?.receiveMessage { response ->
+                                tvValidationMessage.text = "Dispositivo conectado correctamente."
+                                tvValidationMessage.setTextColor(resources.getColor(R.color.colorSuccess, null))
+                                val name = NameDeviceExtractor.extractName(response)
+                                Log.d("Respuesta", "$response")
+                                Log.d("Nombre", "$name")
+                                deviceNameData.text = "Nombre del dispositivo: $name"
+                                btnAdd.visibility = View.VISIBLE
 
-                // Recibir respuesta del dispositivo
-                ReceiveMessageTask(ipAddress, 82) { response ->
-                    if (response == "connect") {
-                        tvValidationMessage.text = "Dispositivo conectado correctamente."
-                        tvValidationMessage.setTextColor(resources.getColor(R.color.colorSuccess, null))
-                        btnAdd.visibility = View.VISIBLE
+                        }
                     } else {
-                        tvValidationMessage.text = "El dispositivo no ha respondido."
+                        tvValidationMessage.text = "No se pudo conectar al dispositivo."
                         tvValidationMessage.setTextColor(resources.getColor(R.color.colorError, null))
                     }
-                }.execute()
-
+                }
             } else {
                 tvValidationMessage.text = "IP no válida dentro de la red."
                 tvValidationMessage.setTextColor(resources.getColor(R.color.colorError, null))
             }
-        }, 3000)
+        }, 3000) // Retraso de 3 segundos (3000 milisegundos)
     }
 
     private fun isIpInSameNetwork(ipAddress: String, routerIp: String): Boolean {
@@ -117,6 +127,4 @@ class AddDevice : AppCompatActivity() {
                     or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
         }
     }
-
-
 }

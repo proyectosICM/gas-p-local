@@ -1,16 +1,13 @@
 import android.os.AsyncTask
+import android.util.Log
 import java.io.BufferedReader
-import java.io.InputStreamReader
-import java.net.Socket
+import java.util.regex.Pattern
 
-class ReceiveMessageTask(private val serverIp: String, private val port: Int, private val callback: (String) -> Unit) : AsyncTask<Void, Void, String?>() {
+class ReceiveMessageTask(private val reader: BufferedReader, private val callback: (String?) -> Unit) : AsyncTask<Void, Void, String?>() {
     override fun doInBackground(vararg params: Void?): String? {
         return try {
-            val socket = Socket(serverIp, port)
-            val input = socket.getInputStream()
-            val reader = BufferedReader(InputStreamReader(input))
             val message = reader.readLine()
-            socket.close()
+            Log.d("mens-r", "Mensaje recibido: $message")
             message
         } catch (e: Exception) {
             e.printStackTrace()
@@ -19,8 +16,6 @@ class ReceiveMessageTask(private val serverIp: String, private val port: Int, pr
     }
 
     override fun onPostExecute(result: String?) {
-        result?.let {
-            callback(it)
-        }
+        callback(result)
     }
 }

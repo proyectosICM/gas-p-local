@@ -1,18 +1,18 @@
 import android.os.AsyncTask
+import android.util.Log
 import java.io.OutputStream
-import java.net.Socket
 
-class SendMessageTask(private val serverIp: String, private val port: Int) : AsyncTask<String, Void, Void>() {
+class SendMessageTask(private val outputStream: OutputStream) : AsyncTask<String, Void, Void>() {
     override fun doInBackground(vararg params: String?): Void? {
         val message = params[0] ?: return null
 
         try {
-            Socket(serverIp, port).use { socket ->
-                socket.getOutputStream().use { outputStream ->
-                    outputStream.write(message.toByteArray())
-                    outputStream.flush()
-                }
-            }
+            // Delay de 1 segundo (1000 milisegundos)
+            //Thread.sleep(1000)
+
+            outputStream.write(message.toByteArray())
+            outputStream.flush()
+            Log.d("mens-e", "Mensaje enviado: $message")
         } catch (e: Exception) {
             e.printStackTrace()
         }
