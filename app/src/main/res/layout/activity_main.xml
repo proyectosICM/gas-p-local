@@ -70,18 +70,19 @@
         app:layout_constraintHorizontal_bias="0.5"/>
 
     <!-- Contenedor para Dispositivos -->
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/clDevicesContent"
+    <LinearLayout
+        android:id="@+id/llDevicesContent"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginTop="16dp"
+        android:orientation="vertical"
         app:layout_constraintTop_toBottomOf="@id/tvTitleDevices"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toTopOf="@id/btnAddDevice"
         app:layout_constraintVertical_bias="0.0">
-        <!-- Contenido del contenedor -->
-    </androidx.constraintlayout.widget.ConstraintLayout>
+        <!-- Aquí se agregarán las tarjetas dinámicamente -->
+    </LinearLayout>
 
     <!-- Botón para Agregar Dispositivos -->
     <Button

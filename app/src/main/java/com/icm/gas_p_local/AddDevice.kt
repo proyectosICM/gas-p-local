@@ -1,6 +1,7 @@
 package com.icm.gas_p_local
 
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.util.Log
@@ -13,6 +14,8 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.icm.gas_p_local.common.KeyboardUtils
 import com.icm.gas_p_local.common.WindowFocusHandler
+import com.icm.gas_p_local.data.DeviceModel
+import com.icm.gas_p_local.data.SaveDeviceStorageManager
 import com.icm.gas_p_local.utils.ESP32ConnectionManager
 import com.icm.gas_p_local.utils.NameDeviceExtractor
 import com.icm.gas_p_local.utils.NetworkUtils
@@ -60,8 +63,26 @@ class AddDevice : AppCompatActivity() {
         }
 
         btnAdd.setOnClickListener {
-            // Aquí puedes agregar la lógica para manejar la acción del botón Agregar
+            // Lógica para agregar el dispositivo
+            val ipAddress = etIpAddress.text.toString()
+            val deviceName = deviceNameData.text.toString()
+
+            if (ipAddress.isNotEmpty() && deviceName.isNotEmpty()) {
+                val device = DeviceModel(ipDevice = ipAddress, nameDevice = deviceName)
+                val devices = SaveDeviceStorageManager.loadDevicesFromJson(this).toMutableList()
+                devices.add(device)
+                SaveDeviceStorageManager.saveDevicesToJson(this, devices)
+                tvValidationMessage.text = "Dispositivo guardado correctamente."
+                tvValidationMessage.setTextColor(resources.getColor(R.color.colorSuccess, null))
+                //val intent = Intent(this, MainActivity::class.java)
+                //startActivity(intent)
+                finish()
+            } else {
+                tvValidationMessage.text = "Información del dispositivo incompleta."
+                tvValidationMessage.setTextColor(resources.getColor(R.color.colorError, null))
+            }
         }
+
 
         btnBack.setOnClickListener {
             finish()
@@ -91,6 +112,7 @@ class AddDevice : AppCompatActivity() {
                                 Log.d("Nombre", "$name")
                                 deviceNameData.text = "Nombre del dispositivo: $name"
                                 btnAdd.visibility = View.VISIBLE
+                                connectionManager?.sendMessage("disconnect")
 
                         }
                     } else {

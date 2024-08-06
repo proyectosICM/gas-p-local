@@ -12,6 +12,7 @@ class ESP32ConnectionManager(private val serverIp: String, private val port: Int
     private var outputStream: OutputStream? = null
     private var reader: BufferedReader? = null
     private var messageCallback: ((String?) -> Unit)? = null
+    private var isListening: Boolean = false
 
     fun connect(callback: (Boolean) -> Unit) {
         ConnectTask(callback).execute()
@@ -20,6 +21,7 @@ class ESP32ConnectionManager(private val serverIp: String, private val port: Int
     fun disconnect() {
         try {
             sendMessage("disconnect")
+            isListening = false
             socket?.close()
             Log.d("mens", "Desconectado del servidor")
         } catch (e: Exception) {
@@ -30,18 +32,20 @@ class ESP32ConnectionManager(private val serverIp: String, private val port: Int
     fun sendMessage(message: String) {
         if (outputStream != null) {
             SendMessageTask(outputStream!!).execute(message)
-            // Start receiving a response after sending a message
-            receiveMessage { response ->
-                // Handle the response
-                messageCallback?.invoke(response)
-                messageCallback = null
-            }
         }
     }
 
     fun receiveMessage(callback: (String?) -> Unit) {
         if (reader != null) {
             messageCallback = callback
+            ReceiveMessageTask(reader!!, callback).execute()
+        }
+    }
+
+    fun startListening(callback: (String?) -> Unit) {
+        if (reader != null) {
+            messageCallback = callback
+            isListening = true
             ReceiveMessageTask(reader!!, callback).execute()
         }
     }
@@ -63,43 +67,47 @@ class ESP32ConnectionManager(private val serverIp: String, private val port: Int
             if (result) {
                 Log.d("mens", "Conectado al servidor")
                 callback(true)
+
             } else {
                 callback(false)
             }
         }
     }
-}
 
-class ReceiveMessageTask(private val reader: BufferedReader, private val callback: (String?) -> Unit) : AsyncTask<Void, Void, String?>() {
-    override fun doInBackground(vararg params: Void?): String? {
-        return try {
-            val message = reader.readLine()
-            Log.d("mens-r", "Mensaje recibido: $message")
-            message
-        } catch (e: Exception) {
-            e.printStackTrace()
-            Log.e("mens-r", "Error al recibir el mensaje: ${e.message}")
-            null
+    private inner class ReceiveMessageTask(private val reader: BufferedReader, private val callback: (String?) -> Unit) : AsyncTask<Void, Void, String?>() {
+        override fun doInBackground(vararg params: Void?): String? {
+            return try {
+                reader.readLine().also { message ->
+                    Log.d("mens-r", "Mensaje recibido: $message")
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Log.e("mens-r", "Error al recibir el mensaje: ${e.message}")
+                null
+            }
+        }
+
+        override fun onPostExecute(result: String?) {
+            callback(result)
+            if (isListening) {
+                ReceiveMessageTask(reader, callback).execute()
+            }
         }
     }
 
-    override fun onPostExecute(result: String?) {
-        callback(result)
-    }
-}
+    private inner class SendMessageTask(private val outputStream: OutputStream) : AsyncTask<String, Void, Void>() {
+        override fun doInBackground(vararg params: String?): Void? {
+            val message = params[0] ?: return null
 
-class SendMessageTask(private val outputStream: OutputStream) : AsyncTask<String, Void, Void>() {
-    override fun doInBackground(vararg params: String?): Void? {
-        val message = params[0] ?: return null
+            try {
+                outputStream.write(message.toByteArray())
+                outputStream.flush()
+                Log.d("mens-e", "Mensaje enviado: $message")
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
 
-        try {
-            outputStream.write(message.toByteArray())
-            outputStream.flush()
-            Log.d("mens-e", "Mensaje enviado: $message")
-        } catch (e: Exception) {
-            e.printStackTrace()
+            return null
         }
-
-        return null
     }
 }
