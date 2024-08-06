@@ -11,6 +11,8 @@ import android.widget.EditText
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import com.icm.gas_p_local.common.KeyboardUtils
+import com.icm.gas_p_local.common.WindowFocusHandler
 import com.icm.gas_p_local.utils.ESP32ConnectionManager
 import com.icm.gas_p_local.utils.NameDeviceExtractor
 import com.icm.gas_p_local.utils.NetworkUtils
@@ -40,7 +42,7 @@ class AddDevice : AppCompatActivity() {
 
         btnTest.setOnClickListener {
             // Hide the keyboard
-            hideKeyboard()
+            KeyboardUtils.hideKeyboard(this)
 
             // Clear previous validation message and button
             tvValidationMessage.text = ""
@@ -72,8 +74,10 @@ class AddDevice : AppCompatActivity() {
             val routerIp = NetworkUtils.getRouterIpAddress(this)
             if (isIpInSameNetwork(ipAddress, routerIp)) {
                 connectionManager?.disconnect()
+                Log.d("Respuesta", "d")
                 connectionManager = ESP32ConnectionManager(ipAddress, 82)
                 connectionManager?.connect { isConnected ->
+                    Log.d("Respuesta", "d2")
                     if (isConnected) {
                         // Enviar el primer mensaje
                         connectionManager?.sendMessage("getName")
@@ -113,18 +117,8 @@ class AddDevice : AppCompatActivity() {
         }
     }
 
-    private fun hideKeyboard() {
-        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-        imm.hideSoftInputFromWindow(currentFocus?.windowToken, 0)
-    }
-
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
-        if (hasFocus) {
-            window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                    or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                    or View.SYSTEM_UI_FLAG_FULLSCREEN
-                    or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
-        }
+        WindowFocusHandler.handleWindowFocusChanged(this, hasFocus)
     }
 }

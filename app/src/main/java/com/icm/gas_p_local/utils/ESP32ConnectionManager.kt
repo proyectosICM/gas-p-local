@@ -1,7 +1,5 @@
 package com.icm.gas_p_local.utils
 
-import ReceiveMessageTask
-import SendMessageTask
 import android.os.AsyncTask
 import android.util.Log
 import java.io.BufferedReader
@@ -63,10 +61,45 @@ class ESP32ConnectionManager(private val serverIp: String, private val port: Int
 
         override fun onPostExecute(result: Boolean) {
             if (result) {
-                sendMessage("isConnected")
                 Log.d("mens", "Conectado al servidor")
+                callback(true)
+            } else {
+                callback(false)
             }
-            callback(result)
         }
+    }
+}
+
+class ReceiveMessageTask(private val reader: BufferedReader, private val callback: (String?) -> Unit) : AsyncTask<Void, Void, String?>() {
+    override fun doInBackground(vararg params: Void?): String? {
+        return try {
+            val message = reader.readLine()
+            Log.d("mens-r", "Mensaje recibido: $message")
+            message
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Log.e("mens-r", "Error al recibir el mensaje: ${e.message}")
+            null
+        }
+    }
+
+    override fun onPostExecute(result: String?) {
+        callback(result)
+    }
+}
+
+class SendMessageTask(private val outputStream: OutputStream) : AsyncTask<String, Void, Void>() {
+    override fun doInBackground(vararg params: String?): Void? {
+        val message = params[0] ?: return null
+
+        try {
+            outputStream.write(message.toByteArray())
+            outputStream.flush()
+            Log.d("mens-e", "Mensaje enviado: $message")
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+        return null
     }
 }
