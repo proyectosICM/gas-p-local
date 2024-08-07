@@ -15,6 +15,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.icm.gas_p_local.common.WindowFocusHandler
+import com.icm.gas_p_local.data.DeleteDeviceStorageManager
 import com.icm.gas_p_local.data.LoadDeviceStorageManager
 import com.icm.gas_p_local.utils.ESP32ConnectionManager
 
@@ -48,7 +49,7 @@ class MainActivity : AppCompatActivity() {
 
         btnAddDevice.setOnClickListener {
             val intent = Intent(this, AddDevice::class.java)
-            startActivity(intent)
+            startActivityForResult(intent, ADD_DEVICE_REQUEST_CODE)
         }
     }
 
@@ -85,6 +86,7 @@ class MainActivity : AppCompatActivity() {
             val tvDeviceName = view.findViewById<TextView>(R.id.tvDeviceName)
             val tvDeviceIp = view.findViewById<TextView>(R.id.tvDeviceIp)
             val btnAction = view.findViewById<Button>(R.id.btnAction)
+            val btnDeleteDevice = view.findViewById<Button>(R.id.btnDeleteDevice)
 
             tvDeviceName.text = device.nameDevice
             tvDeviceIp.text = device.ipDevice
@@ -96,11 +98,31 @@ class MainActivity : AppCompatActivity() {
                 connectionManager = ESP32ConnectionManager(tvDeviceIp.text.toString(), 82)
                 connectionManager?.connect { isConnected ->
                     connectionManager?.sendMessage("activate")
-                   // connectionManager?.sendMessage("disconnect")
+                    //connectionManager?.sendMessage("disconnect")
+                }
+            }
+
+            btnDeleteDevice.setOnClickListener{
+                val result = DeleteDeviceStorageManager.deleteDeviceFromJson(this, device.nameDevice)
+                if (result) {
+                    loadAndDisplayDevices() // Recargar la lista de dispositivos después de la eliminación
+                } else {
+                    Log.d("DeviceDeletion", "No se pudo eliminar el dispositivo")
                 }
             }
 
             llDevicesContent.addView(view)
         }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == ADD_DEVICE_REQUEST_CODE && resultCode == RESULT_OK) {
+            loadAndDisplayDevices() // Recargar la lista de dispositivos después de agregar uno nuevo
+        }
+    }
+
+    companion object {
+        private const val ADD_DEVICE_REQUEST_CODE = 1
     }
 }

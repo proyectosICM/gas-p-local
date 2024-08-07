@@ -4,6 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:padding="16dp"
+    app:layout_constraintWidth="30dp"
     android:background="@color/black">
 
     <TextView
@@ -37,5 +38,15 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tvDeviceIp"
+        android:layout_marginTop="8dp"/>
+    <Button
+        android:id="@+id/btnDeleteDevice"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Eliminar"
+        android:textColor="@color/white"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btnAction"
         android:layout_marginTop="8dp"/>
 </androidx.constraintlayout.widget.ConstraintLayout>

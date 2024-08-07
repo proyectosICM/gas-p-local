@@ -76,6 +76,7 @@ class AddDevice : AppCompatActivity() {
                 tvValidationMessage.setTextColor(resources.getColor(R.color.colorSuccess, null))
                 //val intent = Intent(this, MainActivity::class.java)
                 //startActivity(intent)
+                setResult(RESULT_OK)
                 finish()
             } else {
                 tvValidationMessage.text = "Información del dispositivo incompleta."
@@ -110,7 +111,7 @@ class AddDevice : AppCompatActivity() {
                                 val name = NameDeviceExtractor.extractName(response)
                                 Log.d("Respuesta", "$response")
                                 Log.d("Nombre", "$name")
-                                deviceNameData.text = "Nombre del dispositivo: $name"
+                                deviceNameData.text = "$name"
                                 btnAdd.visibility = View.VISIBLE
                                 connectionManager?.sendMessage("disconnect")
 
