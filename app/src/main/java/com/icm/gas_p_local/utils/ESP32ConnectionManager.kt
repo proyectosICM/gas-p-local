@@ -13,6 +13,7 @@ class ESP32ConnectionManager(private val serverIp: String, private val port: Int
     private var reader: BufferedReader? = null
     private var messageCallback: ((String?) -> Unit)? = null
     private var isListening: Boolean = false
+    var errorCallback: ((String) -> Unit)? = null
 
     fun connect(callback: (Boolean) -> Unit) {
         ConnectTask(callback).execute()
@@ -32,6 +33,8 @@ class ESP32ConnectionManager(private val serverIp: String, private val port: Int
     fun sendMessage(message: String) {
         if (outputStream != null) {
             SendMessageTask(outputStream!!).execute(message)
+        } else {
+            errorCallback?.invoke("No se pudo enviar el mensaje. El dispositivo no está conectado.")
         }
     }
 
@@ -67,8 +70,8 @@ class ESP32ConnectionManager(private val serverIp: String, private val port: Int
             if (result) {
                 Log.d("mens", "Conectado al servidor")
                 callback(true)
-
             } else {
+                errorCallback?.invoke("No se pudo conectar al dispositivo.")
                 callback(false)
             }
         }
@@ -105,6 +108,7 @@ class ESP32ConnectionManager(private val serverIp: String, private val port: Int
                 Log.d("mens-e", "Mensaje enviado: $message")
             } catch (e: Exception) {
                 e.printStackTrace()
+                errorCallback?.invoke("Error al enviar el mensaje: ${e.message}")
             }
 
             return null

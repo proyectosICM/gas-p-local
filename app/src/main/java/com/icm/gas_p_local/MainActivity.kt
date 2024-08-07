@@ -13,6 +13,8 @@ import android.view.View
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.icm.gas_p_local.common.WindowFocusHandler
 import com.icm.gas_p_local.data.DeleteDeviceStorageManager
@@ -97,22 +99,50 @@ class MainActivity : AppCompatActivity() {
                 connectionManager?.disconnect()
                 connectionManager = ESP32ConnectionManager(tvDeviceIp.text.toString(), 82)
                 connectionManager?.connect { isConnected ->
-                    connectionManager?.sendMessage("activate")
-                    //connectionManager?.sendMessage("disconnect")
+                    if (isConnected) {
+                        connectionManager?.sendMessage("activate")
+                        runOnUiThread {
+                            Toast.makeText(this, "Dispositivo activado", Toast.LENGTH_SHORT).show()
+                        }
+                    } else {
+                        runOnUiThread {
+                            Toast.makeText(
+                                this,
+                                "No se pudo conectar al dispositivo",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
                 }
             }
 
             btnDeleteDevice.setOnClickListener{
-                val result = DeleteDeviceStorageManager.deleteDeviceFromJson(this, device.nameDevice)
-                if (result) {
-                    loadAndDisplayDevices() // Recargar la lista de dispositivos después de la eliminación
-                } else {
-                    Log.d("DeviceDeletion", "No se pudo eliminar el dispositivo")
+                showDeleteConfirmationDialog(device.nameDevice) {
+                    val result = DeleteDeviceStorageManager.deleteDeviceFromJson(this, device.nameDevice)
+                    if (result) {
+                        loadAndDisplayDevices() // Recargar la lista de dispositivos después de la eliminación
+                    } else {
+                        Log.d("DeviceDeletion", "No se pudo eliminar el dispositivo")
+                    }
                 }
             }
 
             llDevicesContent.addView(view)
         }
+    }
+
+    private fun showDeleteConfirmationDialog(deviceName: String, onConfirm: () -> Unit) {
+        val builder = AlertDialog.Builder(this)
+        builder.setTitle("Confirmar eliminación")
+        builder.setMessage("¿Estás seguro de que deseas eliminar el dispositivo '$deviceName'?")
+        builder.setPositiveButton("Sí") { dialog, _ ->
+            onConfirm()
+            dialog.dismiss()
+        }
+        builder.setNegativeButton("No") { dialog, _ ->
+            dialog.dismiss()
+        }
+        builder.create().show()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

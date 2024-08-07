@@ -119,6 +119,7 @@ class AddDevice : AppCompatActivity() {
                     } else {
                         tvValidationMessage.text = "No se pudo conectar al dispositivo."
                         tvValidationMessage.setTextColor(resources.getColor(R.color.colorError, null))
+                        deviceNameData.text = ""
                     }
                 }
             } else {
