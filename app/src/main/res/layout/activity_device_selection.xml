@@ -5,21 +5,31 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".DeviceSelectionActivity"
-    android:background="@color/black"
-    >
+    android:background="@color/black">
+
+    <ImageView
+        android:id="@+id/logoImageView"
+        android:layout_width="match_parent"
+        android:layout_height="150dp"
+        android:layout_marginTop="15dp"
+        android:layout_marginBottom="16dp"
+        android:src="@drawable/sslogo_red"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:tint="@color/white"
+        />
 
     <TextView
         android:id="@+id/tvTitleSelection"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="15dp"
-        android:text="Title"
+        android:text="@string/app_name"
         android:textColor="@color/white"
-        android:textSize="20sp"
+        android:textSize="40sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-    />
+        app:layout_constraintTop_toBottomOf="@id/logoImageView"/>
 
     <Button
         android:id="@+id/btnLocalDevices"
@@ -28,11 +38,12 @@
         android:text="Dispositivos Locales"
         android:textSize="20sp"
         android:padding="12dp"
+        android:layout_marginTop="25dp"
         android:textColor="@color/white"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tvTitleSelection"
-        android:layout_marginBottom="80dp" />
+        android:layout_marginBottom="80dp"/>
 
     <Button
         android:id="@+id/btnRemoteDevices"
@@ -46,7 +57,8 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.496"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/btnLocalDevices" />
+        app:layout_constraintTop_toBottomOf="@id/btnLocalDevices"/>
+
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
